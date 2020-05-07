@@ -1,9 +1,10 @@
 import torch
+from lab import monit
 
 from poker.consts import N_RANKS, SCORE_OFFSET, Hands, SCORE_RANGE
-from lab import logger, monit
 
 MASK = 2 ** 13
+
 
 class Combinations:
     def __init__(self, cards: torch.Tensor):
@@ -130,7 +131,7 @@ class Combinations:
 
         for i in range(2, 5):
             is_collect = collected < 5
-            count_score = rank_count * 16 + self.rank_value * (rank_count != 0)
+            count_score = self.rank_value * (rank_count != 0)
             mx, arg_mx = count_score.max(-1)
             rank_count.scatter_(-1, arg_mx.unsqueeze(-1), 0)
 
@@ -145,16 +146,16 @@ class Combinations:
 def _test():
     from poker.deal import deal
 
-    cards = torch.zeros((1000, 7), dtype=torch.long)
+    cards = torch.zeros((100000, 7), dtype=torch.long)
     deal(cards, 0)
-    # cards[0] = torch.tensor([ 0,  3, 12, 16, 18, 32, 39])
+    # cards[0] = torch.tensor([ 2,  4,  6, 15, 19, 24, 50])
     scorer = Combinations(cards)
     with monit.section("Dumb"):
         scores = scorer(is_dumb=True)
     with monit.section("Vector"):
         scores_vec = scorer()
 
-    print(scores)
+    print((scores != scores_vec).sum())
 
 
 if __name__ == '__main__':
