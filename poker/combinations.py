@@ -90,7 +90,7 @@ class Combinations:
             mx, arg_mx2 = count_score.max(-1)
             rank_count.scatter_(-1, arg_mx2.unsqueeze(-1), 0)
 
-            second_pair = mx > (2 * 16)
+            second_pair = mx >= (2 * 16)
 
         with monit.section("Calculate scores"):
             scores += four_of_a_kind * SCORE_OFFSET[Hands.four_of_a_kind]
@@ -147,7 +147,7 @@ def _test():
 
     cards = torch.zeros((1000, 7), dtype=torch.long)
     deal(cards, 0)
-    # cards[0] = torch.tensor([ 2,  8, 20, 31, 32, 46, 49])
+    # cards[0] = torch.tensor([ 0,  3, 12, 16, 18, 32, 39])
     scorer = Combinations(cards)
     with monit.section("Dumb"):
         scores = scorer(is_dumb=True)
