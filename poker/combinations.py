@@ -126,7 +126,7 @@ class Combinations:
             high_card = ~(four_of_a_kind | full_house | three_of_a_kind | two_pairs | pair)
             scores += high_card * SCORE_OFFSET[Hands.high_card]
             high_cards += high_card * ((2 ** arg_mx1) + (2 ** arg_mx2))
-            collected += pair * 2
+            collected += high_card * 2
 
         for i in range(2, 5):
             is_collect = collected < 5
@@ -147,7 +147,7 @@ def _test():
 
     cards = torch.zeros((1000, 7), dtype=torch.long)
     deal(cards, 0)
-    # cards[0] = torch.tensor([3,  6, 16, 17, 27, 44, 45])
+    # cards[0] = torch.tensor([ 2,  8, 20, 31, 32, 46, 49])
     scorer = Combinations(cards)
     with monit.section("Dumb"):
         scores = scorer(is_dumb=True)
