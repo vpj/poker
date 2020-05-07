@@ -1,0 +1,14 @@
+*.pt
+*.swp
+.DS_Store
+.ipynb_checkpoints/
+docs/
+logs/
+__pycache__/
+lab
+bench
+data
+.idea/*
+!.idea/dictionaries
+source.json
+analytics/_tensorboard
