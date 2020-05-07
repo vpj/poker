@@ -32,4 +32,24 @@ HANDS_ORDER = [
 ]
 
 SCORE_OFFSET = {}
-SCORE_RANGE = {}
+SCORE_RANGE = {
+    Hands.high_card: 2 ** 13,
+    Hands.pair: 13 * (2 ** 13),
+    Hands.two_pairs: (13 ** 2) * (2 ** 13),
+    Hands.three_of_a_kind: 13 * (2 ** 13),
+    Hands.straight: 13,
+    Hands.flush: 2 ** 13,
+    Hands.full_house: 13 ** 2,
+    Hands.four_of_a_kind: 13 ** 2,
+    Hands.straight_flush: 13
+}
+
+
+def _calc_offsets():
+    offset = 0
+    for hand in HANDS_ORDER:
+        SCORE_OFFSET[hand] = offset
+        offset += SCORE_RANGE[hand]
+
+
+_calc_offsets()

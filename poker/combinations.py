@@ -3,6 +3,7 @@ import torch
 from poker.consts import N_RANKS, SCORE_OFFSET, Hands, SCORE_RANGE
 from lab import logger, monit
 
+MASK = 2 ** 13
 
 class Combinations:
     def __init__(self, cards: torch.Tensor):
@@ -21,7 +22,7 @@ class Combinations:
         count_score, _ = torch.sort(count_score, dim=-1, descending=True)
         hand = count_score % 16
         if count_score[0] >= 4 * 16:
-            next_card = torch.max(hand[1:])[0].item()
+            next_card = torch.max(hand[1:])
             score = (hand[0] * 13) + next_card
             assert 0 <= score < SCORE_RANGE[Hands.four_of_a_kind]
             return SCORE_OFFSET[Hands.four_of_a_kind] + score
@@ -32,22 +33,22 @@ class Combinations:
             return SCORE_OFFSET[Hands.full_house] + score
 
         if count_score[0] >= 3 * 16:
-            score = (hand[0] << 13) + (2 ** hand[1]) + (2 ** hand[2])
+            score = (hand[0] * MASK) + (2 ** hand[1]) + (2 ** hand[2])
             assert 0 <= score < SCORE_RANGE[Hands.three_of_a_kind]
             return SCORE_OFFSET[Hands.three_of_a_kind] + score
 
         if count_score[0] >= 2 * 16 and count_score[1] >= 2 * 16:
-            next_card = torch.max(hand[2:])[0].item()
-            score = ((hand[0] * 13 + hand[1]) << 13) + (1 << next_card)
+            next_card = torch.max(hand[2:])
+            score = ((hand[0] * 13 + hand[1]) * MASK) + (2 ** next_card)
             assert 0 <= score < SCORE_RANGE[Hands.two_pairs]
             return SCORE_OFFSET[Hands.two_pairs] + score
 
         if count_score[0] >= 2 * 16:
-            score = (hand[0] << 13) + (2 ** hand[1]) + (2 ** hand[2]) + (2 ** hand[3])
+            score = (hand[0] * MASK) + (2 ** hand[1]) + (2 ** hand[2]) + (2 ** hand[3])
             assert 0 <= score < SCORE_RANGE[Hands.pair]
             return SCORE_OFFSET[Hands.pair] + score
 
-        score = (1 << hand[0]) + (1 << hand[1]) + (1 << hand[2]) + (1 << hand[3]) + (1 << hand[4])
+        score = (2 ** hand[0]) + (2 ** hand[1]) + (2 ** hand[2]) + (2 ** hand[3]) + (2 ** hand[4])
         assert 0 <= score < SCORE_RANGE[Hands.high_card]
         return SCORE_OFFSET[Hands.high_card] + score
 
@@ -104,27 +105,27 @@ class Combinations:
 
             three_of_a_kind = three_of_a_kind & ~second_pair
             scores += three_of_a_kind * SCORE_OFFSET[Hands.three_of_a_kind]
-            scores += three_of_a_kind * (arg_mx1 << 13)
-            high_cards += three_of_a_kind * (1 << arg_mx2)
+            scores += three_of_a_kind * (arg_mx1 * MASK)
+            high_cards += three_of_a_kind * (2 ** arg_mx2)
             collected += three_of_a_kind * 4
             assert ((four_of_a_kind | full_house) & three_of_a_kind).sum() == 0
 
             two_pairs = pair & second_pair
             scores += two_pairs * SCORE_OFFSET[Hands.two_pairs]
-            scores += two_pairs * ((arg_mx1 * 13 + arg_mx2) << 13)
+            scores += two_pairs * ((arg_mx1 * 13 + arg_mx2) * MASK)
             collected += two_pairs * 4
             assert ((four_of_a_kind | full_house | three_of_a_kind) & two_pairs).sum() == 0
 
             pair = pair & ~second_pair
             scores += pair * SCORE_OFFSET[Hands.pair]
-            scores += pair * (arg_mx1 << 13)
+            scores += pair * (arg_mx1 * MASK)
             high_cards += pair * (2 ** arg_mx2)
             collected += pair * 3
             assert ((four_of_a_kind | full_house | three_of_a_kind | two_pairs) & pair).sum() == 0
 
             high_card = ~(four_of_a_kind | full_house | three_of_a_kind | two_pairs | pair)
             scores += high_card * SCORE_OFFSET[Hands.high_card]
-            high_cards += high_card * ((1 << arg_mx1) + (1 << arg_mx2))
+            high_cards += high_card * ((2 ** arg_mx1) + (2 ** arg_mx2))
             collected += pair * 2
 
         for i in range(2, 5):
@@ -133,7 +134,8 @@ class Combinations:
             mx, arg_mx = count_score.max(-1)
             rank_count.scatter_(-1, arg_mx.unsqueeze(-1), 0)
 
-            high_cards += is_collect * (1 << arg_mx)
+            high_cards += is_collect * (2 ** arg_mx)
+            collected += is_collect
 
         scores += high_cards
 
@@ -143,10 +145,14 @@ class Combinations:
 def _test():
     from poker.deal import deal
 
-    cards = torch.zeros((100, 7), dtype=torch.long)
+    cards = torch.zeros((1000, 7), dtype=torch.long)
     deal(cards, 0)
+    # cards[0] = torch.tensor([3,  6, 16, 17, 27, 44, 45])
     scorer = Combinations(cards)
-    scores = scorer(is_dumb=True)
+    with monit.section("Dumb"):
+        scores = scorer(is_dumb=True)
+    with monit.section("Vector"):
+        scores_vec = scorer()
 
     print(scores)
 
