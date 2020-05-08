@@ -33,8 +33,9 @@ class Sequences:
 
     def _straight_score(self, ranks: torch.Tensor):
         one_hot = self.rank_one_hot[ranks.view(-1)].view(-1, 13)
-        value = (one_hot.sum(dim=0) > 0) * self.rank_value
-        mask = (2 ** value).sum(dim=1).unsqueeze(1)
+        mask = one_hot.sum(dim=0) > 0
+        value = mask * self.rank_value
+        mask = ((2 ** value) * mask).sum(dim=1).unsqueeze(1)
         straights = (mask & self.straight_masks[0]) == self.straight_masks[0]
         straight_values = straights * (self.straight_value[0] + 1)
         return straight_values.max() - 1
@@ -110,11 +111,11 @@ class Sequences:
 
         rank_mask = rank_one_hot.sum(dim=1) > 0
         rank_value = rank_mask * self.rank_value
-        rank_mask = (2 ** rank_value).sum(dim=1)
+        rank_mask = ((2 ** rank_value) * rank_mask).sum(dim=1)
         straights = (rank_mask.unsqueeze(-1) & self.straight_masks) == self.straight_masks
         straight_values = straights * (self.straight_value + 1)
         straight_scores, _ = straight_values.max(-1)
-        straight = (straight_scores > 0) & ~flush
+        straight = (straight_scores > 0) & ~flush & ~straight_flush
         scores += straight * SCORE_OFFSET[Hands.straight]
         scores += straight * (straight_scores - 1)
 
@@ -126,7 +127,7 @@ def _test():
 
     cards = torch.zeros((20_000, 7), dtype=torch.long)
     deal(cards, 0)
-    # cards[0] = torch.tensor([8, 30, 33, 35, 36, 37, 39])
+    cards[0] = torch.tensor([13, 14, 15, 16, 20, 25, 38])
     scorer = Sequences(cards)
     with monit.section("Dumb"):
         scores = scorer(is_dumb=True)
@@ -134,7 +135,6 @@ def _test():
         scores_vec = scorer()
 
     print((scores != scores_vec).sum())
-    print('scores')
 
 
 if __name__ == '__main__':
