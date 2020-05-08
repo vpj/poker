@@ -158,5 +158,17 @@ def _test():
     print((scores != scores_vec).sum())
 
 
+def _test_gpu():
+    from poker.deal import deal
+
+    with monit.section("Allocate"):
+        cards = torch.zeros((1_000_000, 7), dtype=torch.long, device=torch.device('cuda'))
+    with monit.section('Deal'):
+        deal(cards, 0)
+    scorer = Combinations(cards)
+    with monit.section("Score"):
+        scores_vec = scorer()
+
+
 if __name__ == '__main__':
-    _test()
+    _test_gpu()
