@@ -1,7 +1,7 @@
 import torch
 from lab import monit
 
-from poker.consts import N_RANKS, SCORE_OFFSET, Hands, SCORE_RANGE
+from poker.game.consts import N_RANKS, SCORE_OFFSET, Hands, SCORE_RANGE
 
 STRAIGHT_MASKS = [(2 ** 4) - 1 + (2 ** 12)]
 
@@ -123,7 +123,7 @@ class Sequences:
 
 
 def _test():
-    from poker.deal import deal
+    from poker.game.deal import deal
 
     cards = torch.zeros((20_000, 7), dtype=torch.long)
     deal(cards, 0)

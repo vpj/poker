@@ -1,18 +1,23 @@
 import torch
 from lab import monit
 
-from poker.consts import N_RANKS, SCORE_OFFSET, Hands, SCORE_RANGE
+from poker.game.consts import N_RANKS, SCORE_OFFSET, Hands, SCORE_RANGE
 
 MASK = 2 ** 13
 
 
 class Combinations:
-    def __init__(self, cards: torch.Tensor):
+    def __init__(self, cards: torch.Tensor, *,
+                 is_debug=False):
         self.suit_one_hot = torch.eye(4, device=cards.device, dtype=cards.dtype)
         self.rank_one_hot = torch.eye(13, device=cards.device, dtype=cards.dtype)
         self.rank_value = torch.arange(13, device=cards.device, dtype=cards.dtype).unsqueeze(0)
         self.batch_size = cards.shape[0]
         self.ranks = (cards % N_RANKS)
+        self.is_debug = is_debug
+
+    def section(self, name: str):
+        return monit.section(name, is_silent=not self.is_debug)
 
     def calc_score_dumb(self, ranks: torch.Tensor):
         rank_one_hot = self.rank_one_hot[ranks].view(-1, 13)
@@ -71,7 +76,7 @@ class Combinations:
         collected = self.ranks.new_zeros(self.batch_size)
         high_cards = self.ranks.new_zeros(self.batch_size)
 
-        with monit.section("First combination"):
+        with self.section("First combination"):
             count_score = rank_count * 16 + self.rank_value * (rank_count != 0)
             mx, arg_mx1 = count_score.max(-1)
             rank_count.scatter_(-1, arg_mx1.unsqueeze(-1), 0)
@@ -86,14 +91,14 @@ class Combinations:
 
             pair = mx >= (2 * 16)
 
-        with monit.section("Second combination"):
+        with self.section("Second combination"):
             count_score = rank_count * 16 + self.rank_value * (rank_count != 0)
             mx, arg_mx2 = count_score.max(-1)
             rank_count.scatter_(-1, arg_mx2.unsqueeze(-1), 0)
 
             second_pair = mx >= (2 * 16)
 
-        with monit.section("Calculate scores"):
+        with self.section("Calculate scores"):
             scores += four_of_a_kind * SCORE_OFFSET[Hands.four_of_a_kind]
             scores += four_of_a_kind * ((arg_mx1 * 13) + arg_mx2)
             collected += four_of_a_kind * 5
@@ -144,7 +149,7 @@ class Combinations:
 
 
 def _test():
-    from poker.deal import deal
+    from poker.game.deal import deal
 
     cards = torch.zeros((100000, 7), dtype=torch.long)
     deal(cards, 0)
@@ -159,7 +164,7 @@ def _test():
 
 
 def _test_gpu():
-    from poker.deal import deal
+    from poker.game.deal import deal
 
     with monit.section("Allocate"):
         cards = torch.zeros((1_000_000, 7), dtype=torch.long, device=torch.device('cuda'))
