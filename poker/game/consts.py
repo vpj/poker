@@ -2,6 +2,7 @@ SUITS = ['S', 'H', 'D', 'C']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'X', 'J', 'Q', 'K', 'A']
 N_SUITS = 4
 N_RANKS = 13
+N_CARDS = N_SUITS * N_RANKS
 
 assert len(SUITS) == N_SUITS
 assert len(RANKS) == N_RANKS

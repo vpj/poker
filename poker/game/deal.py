@@ -1,7 +1,7 @@
 import torch
 
 
-def deal(cards: torch.Tensor, dealt: int):
+def deal(cards: torch.Tensor, dealt: int = 0):
     batch_size = cards.shape[0]
     size = cards.shape[1]
 

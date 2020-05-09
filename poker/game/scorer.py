@@ -7,12 +7,17 @@ from poker.game.sequences import Sequences
 
 class Scorer:
     def __init__(self, cards: torch.Tensor):
+        assert cards.shape[1] == 7
         self.combinations = Combinations(cards)
         self.sequences = Sequences(cards)
 
     def __call__(self):
         return torch.max(self.combinations(),
                          self.sequences())
+
+
+def score(cards: torch.Tensor):
+    return Scorer(cards)()
 
 
 def _test_gpu():
