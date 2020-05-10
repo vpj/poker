@@ -16,7 +16,7 @@ class Scorer:
                          self.sequences())
 
 
-def score(cards: torch.Tensor):
+def score(cards: torch.Tensor) -> torch.Tensor:
     return Scorer(cards)()
 
 

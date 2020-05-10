@@ -54,14 +54,14 @@ class Configs(DeviceConfigs, TrainingLoopConfigs):
     labels_batch: torch.Tensor
     loss_func = nn.CrossEntropyLoss()
     accuracy_func = SimpleAccuracy()
-    optimizer: torch.optim.SGD
+    optimizer: torch.optim.Adam = 'adam_optimizer'
     model: Module
 
     loop_step: int = 'loop_step'
     loop_count: int = 10_000_000
     log_new_line_interval = 100_000
     log_write_interval = 1
-    save_models_interval = 1000_000
+    save_models_interval = 5000_000
 
     def train(self):
         deal(self.cards_batch)
@@ -114,7 +114,6 @@ def model(c: Configs):
 def main():
     conf = Configs()
     experiment.create(name='who_won')
-    conf.optimizer = 'adam_optimizer'
     experiment.calculate_configs(conf,
                                  {},
                                  ['run'])
