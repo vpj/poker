@@ -1,6 +1,6 @@
 import torch
-from lab import tracker, experiment
-from lab.helpers.pytorch.module import Module
+from labml import tracker, experiment
+from labml.helpers.pytorch.module import Module
 from torch import nn
 
 from poker.game.consts import N_CARDS
