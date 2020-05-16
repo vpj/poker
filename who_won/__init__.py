@@ -1,8 +1,8 @@
 import torch
-from lab import tracker, experiment
-from lab.helpers.pytorch.device import DeviceConfigs
-from lab.helpers.pytorch.module import Module
-from lab.helpers.training_loop import TrainingLoopConfigs
+from labml import tracker, experiment
+from labml.helpers.pytorch.device import DeviceConfigs
+from labml.helpers.pytorch.module import Module
+from labml.helpers.training_loop import TrainingLoopConfigs
 from torch import nn
 
 from poker.game.consts import N_CARDS
