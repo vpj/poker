@@ -5,5 +5,5 @@
 * Vectorized [poker hand evaluator](https://github.com/lab-ml/poker/tree/master/poker/game) ✅
 * Neural netowrk to predict [which player won](https://github.com/lab-ml/poker/tree/master/who_won) ✅
 * Neural netowrk to predict [winning probabilities](https://github.com/lab-ml/poker/tree/master/probabilities) ✅
-* [Analyse of CFR for Kuhn Poker](https://github.com/lab-ml/poker/tree/master/kuhn_cfr)  ✅
-* Analyze CFR for Leduc Holdem Poker 
+* [CFR for Kuhn Poker](https://github.com/lab-ml/poker/tree/master/kuhn_cfr)  ✅
+* CFR for Leduc Holdem Poker 
